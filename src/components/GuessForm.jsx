@@ -1,11 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { submitGuess } from '../services/api';
 import './GuessForm.css';
+
+const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 function GuessForm({ onResult }) {
   const [value, setValue] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [token, setToken] = useState(null);
+  const widgetId = useRef(null);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    if (!window.turnstile || !wrapperRef.current || widgetId.current != null) return;
+
+    widgetId.current = window.turnstile.render(wrapperRef.current, {
+      sitekey: SITE_KEY,
+      callback: (t) => setToken(t),
+      'expired-callback': () => setToken(null),
+    });
+  }, []);
+
+  const resetTurnstile = () => {
+    if (window.turnstile && widgetId.current != null) {
+      window.turnstile.reset(widgetId.current);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,16 +38,23 @@ function GuessForm({ onResult }) {
       return;
     }
 
+    if (!token) {
+      setError('Verifying you are human. Please try again.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const data = await submitGuess(num);
+      const data = await submitGuess(num, token);
       onResult(data);
+      resetTurnstile();
       if (data.result !== 'correct') {
         setValue('');
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Something went wrong. Try again.';
       setError(msg);
+      resetTurnstile();
     } finally {
       setSubmitting(false);
     }
@@ -50,9 +78,11 @@ function GuessForm({ onResult }) {
         autoFocus
       />
       {error && <p className="guess-error">{error}</p>}
-      <button className="guess-btn" type="submit" disabled={submitting}>
+      <div ref={wrapperRef} className="turnstile-wrapper" />
+      <button className="guess-btn" type="submit" disabled={submitting || !token}>
         {submitting ? 'Checking...' : 'Submit Guess'}
       </button>
+      <p className="rate-info">Rate limit: 10 guesses per minute per IP</p>
     </form>
   );
 }

@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const GameState = require('../models/GameState');
 const Winner = require('../models/Winner');
-const { checkGuess } = require('../services/gameService');
+const { checkGuess, saveWinner } = require('../services/gameService');
 const { validateGuess } = require('../middleware/validation');
 const { sanitizeUsername } = require('../middleware/profanity');
+const { guessLimiter } = require('../middleware/rateLimiter');
+const { verifyTurnstile } = require('../middleware/turnstile');
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
@@ -31,12 +33,29 @@ router.get('/status', async (_req, res) => {
   }
 });
 
-router.post('/guess', validateGuess, sanitizeUsername, async (req, res) => {
+router.post('/guess', guessLimiter, verifyTurnstile, validateGuess, async (req, res) => {
   try {
-    const result = await checkGuess(req.guessValue, req.body.username || null);
+    const result = await checkGuess(req.guessValue);
     res.json(result);
   } catch (err) {
     console.error('POST /guess error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/winners', verifyTurnstile, sanitizeUsername, async (req, res) => {
+  try {
+    const { username, guesses } = req.body;
+    if (!username || !username.trim()) {
+      return res.status(400).json({ message: 'Username is required.' });
+    }
+    if (!Number.isInteger(guesses) || guesses < 1) {
+      return res.status(400).json({ message: 'Valid guess count is required.' });
+    }
+    const winner = await saveWinner(username.trim(), guesses);
+    res.status(201).json(winner);
+  } catch (err) {
+    console.error('POST /winners error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -23,7 +23,7 @@ async function rotateNumber() {
   return game.save();
 }
 
-async function checkGuess(number, username) {
+async function checkGuess(number) {
   const game = await getCurrentGame();
   game.guessCount += 1;
 
@@ -38,10 +38,6 @@ async function checkGuess(number, username) {
   }
 
   const guesses = game.guessCount;
-  if (username) {
-    await Winner.create({ username, guesses, date: new Date() });
-  }
-
   await rotateNumber();
   return {
     result: 'correct',
@@ -50,9 +46,14 @@ async function checkGuess(number, username) {
   };
 }
 
+async function saveWinner(username, guesses) {
+  return Winner.create({ username, guesses, date: new Date() });
+}
+
 module.exports = {
   generateRandomNumber,
   getCurrentGame,
   rotateNumber,
   checkGuess,
+  saveWinner,
 };

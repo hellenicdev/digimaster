@@ -58,3 +58,15 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.turnstile-wrapper {
+  display: flex;
+  justify-content: center;
+  min-height: 65px;
+}
+
+.rate-info {
+  text-align: center;
+  color: #666680;
+  font-size: 0.8rem;
+}

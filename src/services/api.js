@@ -9,13 +9,13 @@ export const getStatus = async () => {
   return data;
 };
 
-export const submitGuess = async (guess) => {
-  const { data } = await api.post('/guess', { guess });
+export const submitGuess = async (guess, turnstileToken) => {
+  const { data } = await api.post('/guess', { guess, 'cf-turnstile-token': turnstileToken });
   return data;
 };
 
-export const submitGuessWithWinner = async (guess, username) => {
-  const { data } = await api.post('/guess', { guess, username });
+export const saveWinner = async (username, guesses, turnstileToken) => {
+  const { data } = await api.post('/winners', { username, guesses, 'cf-turnstile-token': turnstileToken });
   return data;
 };
 
