@@ -16,6 +16,10 @@ app.use(express.json());
 
 app.use('/api/game', gameRoutes);
 
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get('/', (_req, res) => {
   res.json({ message: 'Number Guessing Game API' });
 });
