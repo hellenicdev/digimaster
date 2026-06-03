@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: number-guessing-backend
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/game/status
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: PORT
+        value: "10000"
+      - key: CLIENT_URL
+        sync: false

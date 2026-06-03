@@ -1,0 +1,55 @@
+.winners-title {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #ffd200;
+}
+
+.winners-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.winners-header,
+.winners-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.winners-header {
+  color: #8888a0;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.winners-row:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+
+.col-rank {
+  width: 2rem;
+  text-align: center;
+  color: #8888a0;
+}
+
+.col-name {
+  flex: 1;
+}
+
+.col-guesses {
+  width: 4rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.col-date {
+  width: 5.5rem;
+  text-align: right;
+  color: #8888a0;
+  font-size: 0.8rem;
+}

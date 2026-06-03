@@ -1,0 +1,107 @@
+.result-card {
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.result-card.correct {
+  border-color: #51cf66;
+}
+
+.result-card.high {
+  border-color: #ff922b;
+}
+
+.result-card.low {
+  border-color: #339af0;
+}
+
+.result-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.result-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.result-card.correct .result-text {
+  color: #51cf66;
+}
+
+.result-card.high .result-text {
+  color: #ff922b;
+}
+
+.result-card.low .result-text {
+  color: #339af0;
+}
+
+.result-message {
+  margin-top: 0.5rem;
+  color: #a0a0b0;
+  font-size: 0.9rem;
+}
+
+.winner-form {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.winner-input {
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.winner-input:focus {
+  border-color: #51cf66;
+}
+
+.winner-btn {
+  padding: 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: #51cf66;
+  color: #1a1a2e;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.winner-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skip-btn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #8888a0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+.saved-msg {
+  margin-top: 1rem;
+  color: #51cf66;
+  font-size: 0.95rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #ffd200;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.95rem;
+}
