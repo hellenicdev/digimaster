@@ -16,6 +16,10 @@ function ResultCard({ result, onNewGame }) {
   const wrapperRef = useRef(null);
 
   useEffect(() => {
+    if (!result) {
+      widgetId.current = null;
+      return;
+    }
     if (!wrapperRef.current || widgetId.current != null) return;
 
     const renderWidget = () => {
@@ -37,7 +41,7 @@ function ResultCard({ result, onNewGame }) {
       }, 200);
       return () => clearInterval(id);
     }
-  }, []);
+  }, [result]);
 
   if (!result) return null;
 
