@@ -5,6 +5,6 @@ export default defineConfig({
   plugins: [react()],
   base: '/digimaster/',
   build: {
-    outDir: 'dist',
+    outDir: 'docs',
   },
 });
