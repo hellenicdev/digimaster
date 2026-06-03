@@ -13,13 +13,27 @@ function GuessForm({ onResult }) {
   const wrapperRef = useRef(null);
 
   useEffect(() => {
-    if (!window.turnstile || !wrapperRef.current || widgetId.current != null) return;
+    if (!wrapperRef.current || widgetId.current != null) return;
 
-    widgetId.current = window.turnstile.render(wrapperRef.current, {
-      sitekey: SITE_KEY,
-      callback: (t) => setToken(t),
-      'expired-callback': () => setToken(null),
-    });
+    const renderWidget = () => {
+      widgetId.current = window.turnstile.render(wrapperRef.current, {
+        sitekey: SITE_KEY,
+        callback: (t) => setToken(t),
+        'expired-callback': () => setToken(null),
+      });
+    };
+
+    if (window.turnstile) {
+      renderWidget();
+    } else {
+      const id = setInterval(() => {
+        if (window.turnstile) {
+          clearInterval(id);
+          renderWidget();
+        }
+      }, 200);
+      return () => clearInterval(id);
+    }
   }, []);
 
   const resetTurnstile = () => {
