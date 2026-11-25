@@ -91,7 +91,7 @@ function GuessForm({ onResult }) {
         disabled={submitting}
         autoFocus
       />
-      {error && <p className="guess-error">{error}</p>}
+      {error && <p className="guess-error" role="alert">{error}</p>}
       <div ref={wrapperRef} className="turnstile-wrapper" />
       <button className="guess-btn" type="submit" disabled={submitting || !token}>
         {submitting ? 'Checking...' : 'Submit Guess'}

@@ -1,11 +1,18 @@
 import './WinnersPanel.css';
 
 function WinnersPanel({ winners }) {
-  if (!winners || winners.length === 0) return null;
+  if (!winners || winners.length === 0) {
+    return (
+      <section className="winners-panel card" aria-labelledby="winners-title">
+        <h2 id="winners-title" className="winners-title">Leaderboard</h2>
+        <p className="winners-empty">No winners yet. Be the first to crack the number!</p>
+      </section>
+    );
+  }
 
   return (
-    <div className="winners-panel card">
-      <h2 className="winners-title">Leaderboard</h2>
+    <section className="winners-panel card" aria-labelledby="winners-title">
+      <h2 id="winners-title" className="winners-title">Leaderboard</h2>
       <div className="winners-table">
         <div className="winners-header">
           <span className="col-rank">#</span>
@@ -24,7 +31,7 @@ function WinnersPanel({ winners }) {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 

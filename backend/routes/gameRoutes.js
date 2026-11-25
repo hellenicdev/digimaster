@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const GameState = require('../models/GameState');
 const Winner = require('../models/Winner');
-const { checkGuess, saveWinner } = require('../services/gameService');
+const { checkGuess, saveWinner, redeemWinToken, lastRotation } = require('../services/gameService');
 const { validateGuess } = require('../middleware/validation');
 const { sanitizeUsername } = require('../middleware/profanity');
-const { guessLimiter } = require('../middleware/rateLimiter');
+const { guessLimiter, winnerLimiter } = require('../middleware/rateLimiter');
 const { verifyTurnstile } = require('../middleware/turnstile');
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
@@ -20,11 +20,12 @@ router.get('/status', async (_req, res) => {
       });
     }
 
-    const elapsed = Date.now() - new Date(game.updatedAt).getTime();
+    const changed = lastRotation(game);
+    const elapsed = Date.now() - changed.getTime();
     const hoursRemaining = Math.max(0, (TWELVE_HOURS_MS - elapsed) / 1000 / 60 / 60);
 
     res.json({
-      lastChanged: game.updatedAt,
+      lastChanged: changed.toISOString(),
       hoursRemaining,
     });
   } catch (err) {
@@ -43,14 +44,18 @@ router.post('/guess', guessLimiter, verifyTurnstile, validateGuess, async (req, 
   }
 });
 
-router.post('/winners', verifyTurnstile, sanitizeUsername, async (req, res) => {
+router.post('/winners', winnerLimiter, verifyTurnstile, sanitizeUsername, async (req, res) => {
   try {
-    const { username, guesses } = req.body;
-    if (!username || !username.trim()) {
+    const { username, winToken } = req.body;
+    if (typeof username !== 'string' || !username.trim()) {
       return res.status(400).json({ message: 'Username is required.' });
     }
+    if (username.trim().length > 30) {
+      return res.status(400).json({ message: 'Username must be 30 characters or fewer.' });
+    }
+    const guesses = redeemWinToken(winToken);
     if (!Number.isInteger(guesses) || guesses < 1) {
-      return res.status(400).json({ message: 'Valid guess count is required.' });
+      return res.status(403).json({ message: 'This win has expired or was already saved.' });
     }
     const winner = await saveWinner(username.trim(), guesses);
     res.status(201).json(winner);

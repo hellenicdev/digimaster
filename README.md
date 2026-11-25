@@ -1,319 +1,100 @@
-# Number Guessing Game
+# DigiMaster: Number Guessing Game
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S31XB030)
 
-A full-stack number guessing game built with React, Node.js, Express, and MongoDB.
+A global number guessing game: everyone hunts the same secret number between **1 and 1000**. Guess it, claim your spot on the leaderboard, and a fresh number is generated for everyone.
 
-**Live demo:** [https://<your-github-username>.github.io/digimaster](https://<your-github-username>.github.io/digimaster)
+**Live:** https://hellenicdev.eu/digimaster/
 
-## Architecture
+## Features
 
-```
-┌─────────────────┐       ┌──────────────────┐       ┌──────────────┐
-│  GitHub Pages    │  API  │  Render (Node)   │       │  MongoDB     │
-│  React + Vite    │◄─────►│  Express Server  │◄─────►│  Atlas       │
-│  (Static Files)  │       │  /api/game/*     │       │  GameState   │
-└─────────────────┘       └──────────────────┘       │  Winner      │
-                                                      └──────────────┘
-```
+- One shared secret number for all players, stored in MongoDB
+- Instant "too high" / "too low" feedback
+- Number rotates on a correct guess, or automatically after 12 hours without a winner
+- Top-10 leaderboard (fewest guesses wins); only server-verified wins can be saved
+- Cloudflare Turnstile bot protection and per-IP rate limiting
+- Profanity filtering on usernames (client and server)
+- Accessible, responsive UI with loading, error and empty states
 
-- **Frontend**: React + Vite, deployed to GitHub Pages
-- **Backend**: Node.js + Express, deployed to Render
-- **Database**: MongoDB Atlas (single `GameState` document + `Winner` collection)
+## Tech stack
 
-## Game Rules
+| Layer | Tech |
+| --- | --- |
+| Frontend | React 18, Vite 5, Axios (static build in `docs/` served by GitHub Pages) |
+| Backend | Node.js, Express 4, express-rate-limit, node-cron |
+| Database | MongoDB Atlas via Mongoose |
+| Hosting | GitHub Pages (frontend), Render (API) |
 
-1. A secret number between **1 and 1000** is stored in MongoDB.
-2. Users submit guesses. The API responds with `"too-high"`, `"too-low"`, or `"correct"`.
-3. On a correct guess, a new random number is generated and saved immediately.
-4. If no one guesses correctly for **12 hours**, the number rotates automatically.
-5. Number rotation is validated against MongoDB timestamps (not server uptime).
+## Getting started
 
-## Prerequisites
-
-- Node.js 18+
-- npm
-- MongoDB Atlas account (free tier)
-- Render account (free tier)
-- GitHub account
-
----
-
-## Local Development
-
-### 1. Clone the repository
+Requirements: Node.js 18+ and a MongoDB connection string.
 
 ```bash
-git clone https://github.com/<your-github-username>/digimaster.git
+git clone https://github.com/hellenicdev/digimaster.git
 cd digimaster
-```
 
-### 2. Backend setup
-
-```bash
+# API
 cd backend
-cp .env.example .env
-```
-
-Edit `backend/.env` and set your MongoDB connection string:
-
-```
-MONGODB_URI=mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/number-guessing-game?retryWrites=true&w=majority
-PORT=5000
-CLIENT_URL=http://localhost:5173
-```
-
-```bash
+cp .env.example .env   # fill in the values
 npm install
-npm run dev
-```
+npm run dev            # http://localhost:5000
 
-The backend starts on `http://localhost:5000`.
-
-### 3. Frontend setup
-
-In a separate terminal:
-
-```bash
+# Frontend (new terminal, repo root)
+cd ..
 cp .env.example .env
-```
-
-Edit `.env`:
-
-```
-VITE_API_URL=http://localhost:5000
-```
-
-```bash
 npm install
-npm run dev
+npm run dev            # http://localhost:5173/digimaster/
 ```
 
-The frontend starts on `http://localhost:5173`.
+Build the frontend into `docs/` with `npm run build`.
 
----
+### Environment variables
 
-## MongoDB Atlas Setup
+Backend (`backend/.env`):
 
-1. Go to [MongoDB Atlas](https://www.mongodb.com/atlas) and sign in.
-2. Create a **free (M0) cluster**.
-3. Under **Security → Network Access**, add `0.0.0.0/0` (allow all) for Render — or add Render's IP range.
-4. Under **Security → Database Access**, create a database user.
-5. Click **Connect → Connect your application**, copy the connection string.
-6. Replace `<username>`, `<password>`, and `myFirstDatabase` in the string.
-7. Use this string as your `MONGODB_URI`.
+| Name | Purpose |
+| --- | --- |
+| `MONGODB_URI` | MongoDB connection string |
+| `PORT` | Port for the API (default `5000`) |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret (verification is skipped if unset) |
 
-The database and collections are created automatically on first request.
+Frontend (`.env`):
 
----
+| Name | Purpose |
+| --- | --- |
+| `VITE_API_URL` | Base URL of the API |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
 
-## Backend Deployment (Render)
+CORS is restricted to `https://hellenicdev.eu`.
 
-1. Push your repo to GitHub.
-2. Go to [Render Dashboard](https://dashboard.render.com) → **New + → Web Service**.
-3. Connect your GitHub repository.
-4. Configure:
+## API
 
-| Setting | Value |
-|---------|-------|
-| Name | `number-guessing-backend` |
-| Root Directory | `backend` |
-| Runtime | Node |
-| Build Command | `npm install` |
-| Start Command | `node server.js` |
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/api/game/status` | When the number last changed and hours until auto-rotation |
+| `POST` | `/api/game/guess` | `{ guess }`, returns `too-low`, `too-high`, `correct` (with a one-time `winToken`) or `too-late` |
+| `GET` | `/api/game/winners` | Top 10 winners |
+| `POST` | `/api/game/winners` | `{ username, winToken }`, saves a verified win |
+| `GET` | `/api/health` | Health check |
 
-5. Add environment variables:
-
-| Key | Value |
-|-----|-------|
-| `MONGODB_URI` | Your MongoDB Atlas connection string |
-| `PORT` | `10000` |
-| `CLIENT_URL` | `https://<your-github-username>.github.io` |
-
-6. Click **Create Web Service**.
-
-Render will deploy and give you a URL like `https://number-guessing-backend.onrender.com`.
-
----
-
-## Frontend Deployment (GitHub Pages)
-
-1. Update `vite.config.js` — the `base` is already set to `/digimaster/`. If your repo has a different name, update it.
-2. In your Render dashboard, copy your backend URL (e.g. `https://number-guessing-backend.onrender.com`).
-3. On GitHub, go to your repo → **Settings → Secrets and variables → Actions → New repository secret**:
-
-| Name | Value |
-|-----|-------|
-| `VITE_API_URL` | `https://number-guessing-backend.onrender.com` |
-
-Alternatively, build locally with the correct env var:
-
-```bash
-VITE_API_URL=https://number-guessing-backend.onrender.com npm run build
-```
-
-4. Enable GitHub Pages:
-
-   - Go to repo **Settings → Pages**.
-   - Source: **Deploy from a branch**.
-   - Branch: `gh-pages` (created by the deploy script) → `/ (root)`.
-
-5. Deploy:
-
-```bash
-npm run deploy
-```
-
-This builds the frontend and pushes the `dist` folder to the `gh-pages` branch.
-
-6. Your app is live at `https://<your-github-username>.github.io/digimaster/`.
-
----
-
-## Environment Variables
-
-### Backend (`backend/.env`)
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB Atlas connection string | `mongodb+srv://user:pass@cluster.xxxxx.mongodb.net/game` |
-| `PORT` | Server port | `5000` |
-| `CLIENT_URL` | Allowed CORS origin | `http://localhost:5173` |
-
-### Frontend (`.env`)
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API base URL | `http://localhost:5000` |
-
----
-
-## API Documentation
-
-### `GET /api/game/status`
-
-Returns the current game state.
-
-**Response:**
-
-```json
-{
-  "lastChanged": "2025-01-15T10:30:00.000Z",
-  "hoursRemaining": 7.2
-}
-```
-
-`hoursRemaining` is the time until the next automatic number rotation (max 12).
-
----
-
-### `POST /api/game/guess`
-
-Submit a guess.
-
-**Request:**
-
-```json
-{
-  "guess": 123
-}
-```
-
-Optional: include a username to save to the leaderboard on correct guess.
-
-```json
-{
-  "guess": 123,
-  "username": "Alice"
-}
-```
-
-**Responses:**
-
-```json
-{ "result": "too-high" }
-{ "result": "too-low" }
-{
-  "result": "correct",
-  "guesses": 5,
-  "message": "You guessed correctly! A new number has been generated."
-}
-```
-
-**Validation errors (400):**
-
-```json
-{ "message": "Guess must be between 1 and 1000." }
-```
-
----
-
-### `GET /api/game/winners`
-
-Returns the leaderboard sorted by fewest guesses.
-
-**Response:**
-
-```json
-[
-  {
-    "_id": "...",
-    "username": "Alice",
-    "guesses": 3,
-    "date": "2025-01-15T10:30:00.000Z"
-  }
-]
-```
-
----
-
-## Project Structure
+## Project structure
 
 ```
-/
-├── index.html                     Vite HTML entry
-├── package.json                   Frontend dependencies
-├── vite.config.js                 Vite config (base: /digimaster/)
-├── .env.example                   Frontend env template
-├── .eslintrc.cjs                  Frontend ESLint config
-├── src/
-│   ├── main.jsx                   React entry
-│   ├── App.jsx                    Root component
-│   ├── App.css                    Global styles
-│   ├── services/
-│   │   └── api.js                 Axios API client
-│   └── components/
-│       ├── Header.jsx / .css       Title + description
-│       ├── StatusPanel.jsx / .css  Game status display
-│       ├── GuessForm.jsx / .css    Guess input + submit
-│       ├── ResultCard.jsx / .css   Result display + winner form
-│       └── WinnersPanel.jsx / .css Leaderboard
+digimaster/
+├── src/                 React app (components, API client, styles)
+├── docs/                Production build served by GitHub Pages
 ├── backend/
-│   ├── package.json               Backend dependencies
-│   ├── server.js                  Express app entry
-│   ├── render.yaml                Render deployment config
-│   ├── .env.example               Backend env template
-│   ├── .eslintrc.json             Backend ESLint config
-│   ├── config/
-│   │   └── db.js                  MongoDB connection
-│   ├── models/
-│   │   ├── GameState.js           Single-document game state
-│   │   └── Winner.js              Leaderboard entries
-│   ├── services/
-│   │   ├── gameService.js         Core game logic
-│   │   └── scheduler.js           12-hour rotation cron
-│   ├── routes/
-│   │   └── gameRoutes.js          API route handlers
-│   └── middleware/
-│       ├── validation.js          Guess validation
-│       └── profanity.js           Username sanitization
-└── README.md
+│   ├── config/          MongoDB connection
+│   ├── middleware/      Rate limiting, Turnstile, validation, profanity filter
+│   ├── models/          GameState, Winner
+│   ├── routes/          /api/game routes
+│   ├── services/        Game logic and 12-hour scheduler
+│   └── server.js        Express entry point
+└── vite.config.js
 ```
 
----
+## License
 
-## Bonus Features
+© 2026 HellenicDev. All rights reserved.
 
-- **Leaderboard**: Winners are stored in MongoDB with their username and guess count.
-- **Profanity filter**: Usernames are sanitized using `bad-words` on both client and server.
-- **Auto-rotation**: The number rotates after 12 hours of inactivity, verified by MongoDB timestamps.
-- **Persistent state**: The game state survives server restarts, crashes, and redeployments.
+Built by [HellenicDev](https://hellenicdev.eu).

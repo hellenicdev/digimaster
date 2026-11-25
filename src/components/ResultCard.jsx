@@ -47,11 +47,11 @@ function ResultCard({ result, onNewGame }) {
 
   const isCorrect = result.result === 'correct';
   const isHigh = result.result === 'too-high';
-  const isLow = result.result === 'too-low';
+  const isLate = result.result === 'too-late';
 
-  const icon = isCorrect ? '🎉' : isHigh ? '⬆' : '⬇';
-  const label = isCorrect ? 'Correct!' : isHigh ? 'Too High' : 'Too Low';
-  const cls = isCorrect ? 'correct' : isHigh ? 'high' : 'low';
+  const icon = isCorrect ? '🎉' : isLate ? '⏱' : isHigh ? '⬆' : '⬇';
+  const label = isCorrect ? 'Correct!' : isLate ? 'Just Missed It' : isHigh ? 'Too High' : 'Too Low';
+  const cls = isCorrect ? 'correct' : isHigh || isLate ? 'high' : 'low';
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -67,18 +67,22 @@ function ResultCard({ result, onNewGame }) {
     }
     setSaving(true);
     try {
-      await saveWinner(clean, result.guesses, token);
+      await saveWinner(clean, result.winToken, token);
       setSaved(true);
-    } catch {
-      setNameError('Failed to save. Try again.');
+    } catch (err) {
+      setNameError(err.response?.data?.message || 'Failed to save. Try again.');
+      if (window.turnstile && widgetId.current != null) {
+        window.turnstile.reset(widgetId.current);
+        setToken(null);
+      }
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className={`result-card card ${cls}`}>
-      <div className="result-icon">{icon}</div>
+    <div className={`result-card card ${cls}`} role="status" aria-live="polite">
+      <div className="result-icon" aria-hidden="true">{icon}</div>
       <div className="result-text">{label}</div>
       {result.message && <p className="result-message">{result.message}</p>}
 
@@ -88,12 +92,14 @@ function ResultCard({ result, onNewGame }) {
             className="winner-input"
             type="text"
             placeholder="Enter your name for the leaderboard"
+            aria-label="Your name for the leaderboard"
+            autoComplete="nickname"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             disabled={saving}
             maxLength={30}
           />
-          {nameError && <p className="guess-error">{nameError}</p>}
+          {nameError && <p className="guess-error" role="alert">{nameError}</p>}
           <div ref={wrapperRef} className="turnstile-wrapper" />
           <button className="winner-btn" type="submit" disabled={saving || !token}>
             {saving ? 'Saving...' : 'Save to Leaderboard'}
