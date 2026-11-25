@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const GameState = require('../models/GameState');
-const { generateRandomNumber } = require('./gameService');
+const { generateRandomNumber, lastRotation } = require('./gameService');
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
@@ -9,10 +9,11 @@ async function checkAndRotate() {
     const game = await GameState.findOne();
     if (!game) return;
 
-    const elapsed = Date.now() - new Date(game.updatedAt).getTime();
+    const elapsed = Date.now() - lastRotation(game).getTime();
     if (elapsed >= TWELVE_HOURS_MS) {
       game.currentNumber = generateRandomNumber();
       game.guessCount = 0;
+      game.rotatedAt = new Date();
       await game.save();
       console.log('[Scheduler] Number rotated after 12+ hour idle period');
     }

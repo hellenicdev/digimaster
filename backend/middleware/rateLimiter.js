@@ -14,4 +14,15 @@ const guessLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-module.exports = { guessLimiter };
+const winnerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => ipKeyGenerator(req.ip || req.connection.remoteAddress),
+  handler: (_req, res) => {
+    res.status(429).json({ message: 'Too many leaderboard submissions. Please try again later.' });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { guessLimiter, winnerLimiter };

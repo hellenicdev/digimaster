@@ -19,7 +19,7 @@ function App() {
       setStatus(data);
       setError(null);
     } catch (err) {
-      setError('Could not connect to server. Make sure the backend is running.');
+      setError('Could not reach the game server. It may be waking up, please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -41,7 +41,7 @@ function App() {
 
   const handleGuessResult = (guessResult) => {
     setResult(guessResult);
-    if (guessResult.result === 'correct') {
+    if (guessResult.result === 'correct' || guessResult.result === 'too-late') {
       fetchStatus();
       fetchWinners();
     }
@@ -52,15 +52,26 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <main className="app">
       <Header />
-      {loading && <div className="card">Loading game state...</div>}
-      {error && <div className="card" style={{ borderColor: '#ff6b6b' }}>{error}</div>}
+      {loading && (
+        <div className="card" role="status" aria-live="polite">
+          Loading game state… (the server may take a few seconds to wake up)
+        </div>
+      )}
+      {error && (
+        <div className="card error-card" role="alert">
+          <p>{error}</p>
+          <button type="button" className="link-btn" onClick={() => { setLoading(true); fetchStatus(); fetchWinners(); }}>
+            Try again
+          </button>
+        </div>
+      )}
       {status && <StatusPanel lastChanged={status.lastChanged} hoursRemaining={status.hoursRemaining} />}
       {status && <GuessForm onResult={handleGuessResult} />}
       {result && <ResultCard result={result} onNewGame={handleNewGame} />}
       <WinnersPanel winners={winners} />
-    </div>
+    </main>
   );
 }
 

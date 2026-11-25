@@ -33,3 +33,40 @@ body {
   padding: 1.5rem;
   backdrop-filter: blur(10px);
 }
+
+.error-card {
+  border-color: #ff6b6b;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.winners-empty {
+  opacity: 0.75;
+  text-align: center;
+}
+
+:focus-visible {
+  outline: 2px solid #8fb3ff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  body {
+    padding: 1rem 0.75rem;
+  }
+
+  .card {
+    padding: 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

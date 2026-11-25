@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/game`,
+  timeout: 15000,
 });
 
 export const getStatus = async () => {
@@ -14,8 +15,8 @@ export const submitGuess = async (guess, turnstileToken) => {
   return data;
 };
 
-export const saveWinner = async (username, guesses, turnstileToken) => {
-  const { data } = await api.post('/winners', { username, guesses, 'cf-turnstile-token': turnstileToken });
+export const saveWinner = async (username, winToken, turnstileToken) => {
+  const { data } = await api.post('/winners', { username, winToken, 'cf-turnstile-token': turnstileToken });
   return data;
 };
 
